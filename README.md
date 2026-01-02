@@ -22,7 +22,7 @@ ln -s ~/path/to/cxx-init/cxx-init ~/.local/bin/
 ln -s ~/path/to/cxx-init/cxx-fix ~/.local/bin/
 ```
 
-where `~/path/to/` is wherever the path you want to put `cxx-init in.`
+where `~/path/to/` is wherever the path you want to put `cxx-init` in.
 
 The scripts resolve symlinks to find config files in the repo directory.
 
