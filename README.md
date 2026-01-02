@@ -38,6 +38,18 @@ cd myproject
 
 __Note:__ Run `./build.sh` at least once before opening in your editor. This generates `compile_commands.json` which clangd needs for intellisense.
 
+Debug build (includes `_GLIBCXX_ASSERTIONS` for bounds checking):
+
+```bash
+./build.sh --debug
+```
+
+Clean build directory:
+
+```bash
+./build.sh --clean
+```
+
 Build with clang-tidy:
 
 ```bash
