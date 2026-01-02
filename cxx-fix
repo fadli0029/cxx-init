@@ -1,0 +1,25 @@
+#!/bin/bash
+
+set -e
+
+if [[ "$1" =~ ^(-h|--help|h|help)$ ]]; then
+  echo "Usage: cxx-fix [path]"
+  echo ""
+  echo "Run clang-tidy --fix on source files."
+  echo ""
+  echo "Arguments:"
+  echo "  path    Optional. File or directory to fix."
+  echo "          Defaults to src/ if not specified."
+  exit 0
+fi
+
+if [[ ! -d "build" ]]; then
+  echo "Error: build directory not found. Run build.sh first."
+  exit 1
+fi
+
+if [[ -n "$1" ]]; then
+  clang-tidy -p build --fix "$1"
+else
+  find src -name '*.cpp' -exec clang-tidy -p build --fix {} +
+fi

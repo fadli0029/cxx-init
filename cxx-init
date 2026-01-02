@@ -1,0 +1,108 @@
+#!/bin/bash
+
+set -e
+
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+
+if [[ "$1" =~ ^(-h|--help|h|help)$ ]]; then
+  echo "Usage: cxx-init <project-name>"
+  echo ""
+  echo "Create a new C++ project with CMake, C++23 modules, clang-format, and clang-tidy."
+  echo ""
+  echo "Arguments:"
+  echo "  project-name    Name of the project directory to create."
+  exit 0
+fi
+
+if [[ -z "$1" ]]; then
+  echo "Usage: cxx-init <project-name>"
+  exit 1
+fi
+
+name="$1"
+
+if [[ -d "$name" ]]; then
+  echo "Error: directory '$name' already exists"
+  exit 1
+fi
+
+mkdir -p "$name"/{src,include}
+cd "$name"
+
+# .clangd
+cat > .clangd << 'EOF'
+CompileFlags:
+  CompilationDatabase: "build"
+EOF
+
+# .clangd-modules is a marker file for clangd-wrapper (a wrapper script that runs clangd with
+# --experimental-modules-support when this file exists). This enables C++20 modules support in clangd.
+# This is harmless if you don't use such a wrapper because it's just an empty file.
+touch .clangd-modules
+
+# .clang-tidy and .clang-format
+cp "$SCRIPT_DIR/.clang-tidy" .
+cp "$SCRIPT_DIR/.clang-format" .
+
+# CMakeLists.txt
+cat > CMakeLists.txt << EOF
+cmake_minimum_required(VERSION 4.0)
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Experimental UUID for import std; may change with CMake updates
+# Check: https://github.com/Kitware/CMake/blob/master/Help/dev/experimental.rst
+set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "d0edc3af-4c50-42ea-a356-e2862fe7a444")
+
+project($name LANGUAGES CXX)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CXX_SCAN_FOR_MODULES ON)
+
+add_executable($name src/main.cpp)
+target_include_directories($name PRIVATE include)
+set_target_properties($name PROPERTIES CXX_MODULE_STD 1)
+EOF
+
+# build.sh
+cat > build.sh << 'EOF'
+#!/bin/bash
+
+run_tidy=false
+
+for arg in "$@"; do
+  case "$arg" in
+    clean) rm -rf build ;;
+    --tidy) run_tidy=true ;;
+  esac
+done
+
+cmake -B build -G Ninja -DCMAKE_CXX_COMPILER=clang++
+cmake --build build
+
+if $run_tidy; then
+  echo "Running clang-tidy..."
+  find src -name '*.cpp' -exec clang-tidy -p build {} +
+fi
+EOF
+chmod +x build.sh
+
+# src/main.cpp
+cat > src/main.cpp << 'EOF'
+import std;
+
+int main() {
+  std::println("Hello, World!");
+  return 0;
+}
+EOF
+
+echo "Created $name/"
+echo "  src/main.cpp"
+echo "  include/"
+echo "  CMakeLists.txt"
+echo "  build.sh"
+echo "  .clangd"
+echo "  .clangd-modules"
+echo "  .clang-tidy"
+echo "  .clang-format"

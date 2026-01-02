@@ -1,0 +1,79 @@
+# Modern C++ style with Core Guidelines checks
+# Naming: CamelCase types, lower_case functions/variables, kCamelCase constants
+
+Checks: >
+  -*,
+  readability-identifier-naming,
+  cppcoreguidelines-*,
+  modernize-*,
+  bugprone-*,
+  performance-*,
+  -modernize-use-trailing-return-type,
+  -bugprone-exception-escape
+
+CheckOptions:
+  # Types: CamelCase
+  readability-identifier-naming.ClassCase: CamelCase
+  readability-identifier-naming.StructCase: CamelCase
+  readability-identifier-naming.EnumCase: CamelCase
+  readability-identifier-naming.TypeAliasCase: CamelCase
+  readability-identifier-naming.TypedefCase: CamelCase
+  readability-identifier-naming.UnionCase: CamelCase
+
+  # Functions and methods: lower_case
+  readability-identifier-naming.FunctionCase: lower_case
+  readability-identifier-naming.MethodCase: lower_case
+
+  # Variables: lower_case
+  readability-identifier-naming.VariableCase: lower_case
+  readability-identifier-naming.ParameterCase: lower_case
+  readability-identifier-naming.LocalVariableCase: lower_case
+  readability-identifier-naming.GlobalVariableCase: lower_case
+
+  # Member variables: lower_case with trailing underscore
+  readability-identifier-naming.MemberCase: lower_case
+  readability-identifier-naming.MemberSuffix: '_'
+  readability-identifier-naming.PrivateMemberCase: lower_case
+  readability-identifier-naming.PrivateMemberSuffix: '_'
+  readability-identifier-naming.ProtectedMemberCase: lower_case
+  readability-identifier-naming.ProtectedMemberSuffix: '_'
+  readability-identifier-naming.PublicMemberCase: lower_case
+
+  # Constants: kCamelCase
+  readability-identifier-naming.ConstantCase: CamelCase
+  readability-identifier-naming.ConstantPrefix: 'k'
+  readability-identifier-naming.ConstexprVariableCase: CamelCase
+  readability-identifier-naming.ConstexprVariablePrefix: 'k'
+  readability-identifier-naming.EnumConstantCase: CamelCase
+  readability-identifier-naming.EnumConstantPrefix: 'k'
+  readability-identifier-naming.StaticConstantCase: CamelCase
+  readability-identifier-naming.StaticConstantPrefix: 'k'
+  readability-identifier-naming.GlobalConstantCase: CamelCase
+  readability-identifier-naming.GlobalConstantPrefix: 'k'
+
+  # Namespaces: lower_case
+  readability-identifier-naming.NamespaceCase: lower_case
+
+  # Template parameters: PascalCase (conventional)
+  readability-identifier-naming.TemplateParameterCase: CamelCase
+
+  # Macros: UPPER_CASE (per NL.9)
+  readability-identifier-naming.MacroDefinitionCase: UPPER_CASE
+
+  # Uncomment for std-lib style (lower_case types and constants):
+  # readability-identifier-naming.ClassCase: lower_case
+  # readability-identifier-naming.StructCase: lower_case
+  # readability-identifier-naming.EnumCase: lower_case
+  # readability-identifier-naming.TypeAliasCase: lower_case
+  # readability-identifier-naming.TypedefCase: lower_case
+  # readability-identifier-naming.UnionCase: lower_case
+  # readability-identifier-naming.ConstantCase: lower_case
+  # readability-identifier-naming.ConstantPrefix: ''
+  # readability-identifier-naming.ConstexprVariableCase: lower_case
+  # readability-identifier-naming.ConstexprVariablePrefix: ''
+  # readability-identifier-naming.EnumConstantCase: lower_case
+  # readability-identifier-naming.EnumConstantPrefix: ''
+  # readability-identifier-naming.StaticConstantCase: lower_case
+  # readability-identifier-naming.StaticConstantPrefix: ''
+  # readability-identifier-naming.GlobalConstantCase: lower_case
+  # readability-identifier-naming.GlobalConstantPrefix: ''
