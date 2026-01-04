@@ -10,6 +10,7 @@ if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "--h" ]]; then
   echo "  --sanitize       Enable ASAN and UBSAN"
   echo "  --tidy           Run clang-tidy after build"
   echo "  --compiler=NAME  Use specified compiler (default: clang++)"
+  echo "  --verbose        Show actual compiler commands"
   echo "  -h, --help       Show this help message"
   echo ""
   echo "Defaults:"
@@ -24,6 +25,7 @@ build_type="Release"
 compiler="clang++"
 strict_warnings=false
 sanitize=false
+verbose=false
 
 for arg in "$@"; do
   case "$arg" in
@@ -33,6 +35,7 @@ for arg in "$@"; do
     --compiler=*) compiler="${arg#*=}" ;;
     --strict) strict_warnings=true ;;
     --sanitize) sanitize=true ;;
+    --verbose) verbose=true ;;
     *)
       echo "Error: unknown option '$arg'"
       echo "Run './build.sh --help' for usage"
@@ -54,8 +57,20 @@ if $sanitize; then
   cmake_args="$cmake_args -DENABLE_SANITIZERS=ON"
 fi
 
+echo ""
+echo "Build:    $build_type"
+echo "Compiler: $compiler"
+echo "Strict:   $strict_warnings"
+echo "Sanitize: $sanitize"
+echo ""
+echo ">> cmake $cmake_args"
 cmake $cmake_args
-cmake --build build
+
+if $verbose; then
+  cmake --build build -- -v
+else
+  cmake --build build
+fi
 
 if $run_tidy; then
   echo "Running clang-tidy..."
