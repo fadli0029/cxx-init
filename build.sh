@@ -11,6 +11,11 @@ if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "--h" ]]; then
   echo "  --tidy           Run clang-tidy after build"
   echo "  --compiler=NAME  Use specified compiler (default: clang++)"
   echo "  -h, --help       Show this help message"
+  echo ""
+  echo "Defaults:"
+  echo "  Build type: Release"
+  echo "  Compiler:   clang++"
+  echo "  Warnings:   -Wall -Wextra -Wpedantic -Wshadow -Wconversion"
   exit 0
 fi
 
