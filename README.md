@@ -38,6 +38,16 @@ cd myproject
 
 __Note:__ Run `./build.sh` at least once before opening in your editor. This generates `compile_commands.json` which clangd needs for intellisense.
 
+__Tip:__ You can add this function to your shell rc to create, cd, and build in one command:
+
+```bash
+cxx() {
+  cxx-init "$1" && cd "$1" && ./build.sh
+}
+```
+
+Then just run `cxx myproject`.
+
 Debug build (includes `_GLIBCXX_ASSERTIONS` for bounds checking):
 
 ```bash
