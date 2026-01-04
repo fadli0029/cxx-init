@@ -50,6 +50,7 @@ cmake_minimum_required(VERSION 4.0)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 # Experimental UUID for import std; may change with CMake updates
 # Check: https://github.com/Kitware/CMake/blob/master/Help/dev/experimental.rst
 set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "d0edc3af-4c50-42ea-a356-e2862fe7a444")
@@ -63,34 +64,23 @@ add_executable($name src/main.cpp)
 target_include_directories($name PRIVATE include)
 set_target_properties($name PROPERTIES CXX_MODULE_STD 1)
 
+target_compile_options($name PRIVATE -Wall -Wextra -Wpedantic -Wshadow -Wconversion)
+if(STRICT_WARNINGS)
+  target_compile_options($name PRIVATE -Werror)
+endif()
+
+if(ENABLE_SANITIZERS)
+  target_compile_options($name PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer)
+  target_link_options($name PRIVATE -fsanitize=address,undefined)
+endif()
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   target_compile_definitions($name PRIVATE _GLIBCXX_ASSERTIONS)
 endif()
 EOF
 
 # build.sh
-cat > build.sh << 'EOF'
-#!/bin/bash
-
-run_tidy=false
-build_type="Release"
-
-for arg in "$@"; do
-  case "$arg" in
-    --clean) rm -rf build ;;
-    --tidy) run_tidy=true ;;
-    --debug) build_type="Debug" ;;
-  esac
-done
-
-cmake -B build -G Ninja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE="$build_type"
-cmake --build build
-
-if $run_tidy; then
-  echo "Running clang-tidy..."
-  find src -name '*.cpp' -exec clang-tidy -p build {} +
-fi
-EOF
+cp "$SCRIPT_DIR/build.sh" .
 chmod +x build.sh
 
 # src/main.cpp
