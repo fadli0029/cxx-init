@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "--h" ]]; then
   echo "Usage: ./build.sh [options]"
   echo ""
   echo "Options:"
@@ -28,6 +28,11 @@ for arg in "$@"; do
     --compiler=*) compiler="${arg#*=}" ;;
     --strict) strict_warnings=true ;;
     --sanitize) sanitize=true ;;
+    *)
+      echo "Error: unknown option '$arg'"
+      echo "Run './build.sh --help' for usage"
+      exit 1
+      ;;
   esac
 done
 
