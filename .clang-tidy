@@ -1,5 +1,5 @@
 # Modern C++ style with Core Guidelines checks
-# Naming: CamelCase types, lower_case functions/variables, kCamelCase constants
+# Naming: CamelCase types, lower_case functions/variables, kCamelCase constants (except enum constants: CamelCase)
 
 Checks: >
   -*,
@@ -38,6 +38,7 @@ CheckOptions:
   readability-identifier-naming.ProtectedMemberCase: lower_case
   readability-identifier-naming.ProtectedMemberSuffix: '_'
   readability-identifier-naming.PublicMemberCase: lower_case
+  readability-identifier-naming.PublicMemberSuffix: ''
 
   # Constants: kCamelCase
   readability-identifier-naming.ConstantCase: CamelCase
@@ -45,7 +46,9 @@ CheckOptions:
   readability-identifier-naming.ConstexprVariableCase: CamelCase
   readability-identifier-naming.ConstexprVariablePrefix: 'k'
   readability-identifier-naming.EnumConstantCase: CamelCase
-  readability-identifier-naming.EnumConstantPrefix: 'k'
+  readability-identifier-naming.EnumConstantPrefix: ''
+  readability-identifier-naming.ScopedEnumConstantCase: CamelCase
+  readability-identifier-naming.ScopedEnumConstantPrefix: ''
   readability-identifier-naming.StaticConstantCase: CamelCase
   readability-identifier-naming.StaticConstantPrefix: 'k'
   readability-identifier-naming.GlobalConstantCase: CamelCase
@@ -73,6 +76,8 @@ CheckOptions:
   # readability-identifier-naming.ConstexprVariablePrefix: ''
   # readability-identifier-naming.EnumConstantCase: lower_case
   # readability-identifier-naming.EnumConstantPrefix: ''
+  # readability-identifier-naming.ScopedEnumConstantCase: lower_case
+  # readability-identifier-naming.ScopedEnumConstantPrefix: ''
   # readability-identifier-naming.StaticConstantCase: lower_case
   # readability-identifier-naming.StaticConstantPrefix: ''
   # readability-identifier-naming.GlobalConstantCase: lower_case
