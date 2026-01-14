@@ -55,10 +55,23 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Check: https://github.com/Kitware/CMake/blob/master/Help/dev/experimental.rst
 set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "d0edc3af-4c50-42ea-a356-e2862fe7a444")
 
+# Hardening flags (OpenSSF recommended) - set via CMAKE_CXX_FLAGS for C++23 module compatibility
+# Flags must apply to both the internal std module target and user code
+# https://best.openssf.org/Compiler-Hardening-Guides/Compiler-Options-Hardening-Guide-for-C-and-C++
+# https://discourse.cmake.org/t/error-module-file-cmakefiles-cmake-cxx23-dir-std-pcm-cannot-be-loaded-due-to-a-configuration-mismatch-with-the-current-compilation/13276
+set(HARDENING_FLAGS "-fstack-protector-strong -fstack-clash-protection -fcf-protection=full")
+set(CMAKE_CXX_FLAGS_RELEASE "\${CMAKE_CXX_FLAGS_RELEASE} \${HARDENING_FLAGS}")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "\${CMAKE_CXX_FLAGS_RELWITHDEBINFO} \${HARDENING_FLAGS}")
+
 project($name LANGUAGES CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_SCAN_FOR_MODULES ON)
+
+# _FORTIFY_SOURCE breaks Clang C++23 modules: https://github.com/llvm/llvm-project/issues/121709
+if((CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo") AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  add_compile_definitions(_FORTIFY_SOURCE=3)
+endif()
 
 # Executables: add new targets here as "name src/file.cpp"
 set(TARGETS
@@ -116,20 +129,6 @@ foreach(i RANGE 0 \${TARGETS_LAST} 2)
   # Debug: runtime assertions
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(\${target_name} PRIVATE _GLIBCXX_ASSERTIONS)
-  endif()
-
-  # Release: hardening flags (OpenSSF recommended)
-  # https://best.openssf.org/Compiler-Hardening-Guides/Compiler-Options-Hardening-Guide-for-C-and-C++
-  if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-    target_compile_definitions(\${target_name} PRIVATE _FORTIFY_SOURCE=3)
-    target_compile_options(\${target_name} PRIVATE
-      -fstack-protector-strong  # Stack buffer overflow detection
-      -fstack-clash-protection  # Stack clash attack mitigation
-    )
-    # Control-flow protection (x86_64 only)
-    if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
-      target_compile_options(\${target_name} PRIVATE -fcf-protection=full)
-    endif()
   endif()
 endforeach()
 EOF

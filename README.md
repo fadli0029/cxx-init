@@ -135,11 +135,13 @@ Use `--strict` to add `-Werror` (warnings as errors). This is recommended for CI
 Release builds include [OpenSSF-recommended](https://best.openssf.org/Compiler-Hardening-Guides/Compiler-Options-Hardening-Guide-for-C-and-C++.html) hardening flags:
 
 ```
--D_FORTIFY_SOURCE=3
 -fstack-protector-strong
 -fstack-clash-protection
--fcf-protection=full  (x86_64 only)
+-fcf-protection=full
+-D_FORTIFY_SOURCE=3  (GCC only)
 ```
+
+Note: `_FORTIFY_SOURCE` is GCC-only because it [breaks Clang C++23 modules](https://github.com/llvm/llvm-project/issues/121709). The other flags are set via `CMAKE_CXX_FLAGS_*` before `project()` to ensure they apply to both the internal `std` module and user code ([CMake module compatibility issue](https://discourse.cmake.org/t/error-module-file-cmakefiles-cmake-cxx23-dir-std-pcm-cannot-be-loaded-due-to-a-configuration-mismatch-with-the-current-compilation/13276)).
 
 Debug builds get `_GLIBCXX_ASSERTIONS` for runtime checks instead.
 
