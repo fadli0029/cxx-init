@@ -1,0 +1,76 @@
+#!/bin/bash
+
+set -e
+
+if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "--h" ]]; then
+  echo "Usage: cxx-add <source-file> <executable-name>"
+  echo ""
+  echo "Add a new executable target to the current project."
+  echo ""
+  echo "Arguments:"
+  echo "  source-file      Source file path (e.g., src/foo.cpp)"
+  echo "  executable-name  Name of the executable to create"
+  echo ""
+  echo "Example:"
+  echo "  cxx-add src/test.cpp test"
+  exit 0
+fi
+
+if [[ -z "$1" || -z "$2" ]]; then
+  echo "Usage: cxx-add <source-file> <executable-name>"
+  exit 1
+fi
+
+source_file="$1"
+exec_name="$2"
+
+if [[ ! -f "CMakeLists.txt" ]]; then
+  echo "Error: CMakeLists.txt not found. Are you in a cxx-init project?"
+  exit 1
+fi
+
+# Check if TARGETS list exists
+if ! grep -q "^set(TARGETS" CMakeLists.txt; then
+  echo "Error: CMakeLists.txt doesn't have a TARGETS list. Is this a cxx-init project?"
+  exit 1
+fi
+
+# Check if target name already exists
+if grep -q "^  $exec_name " CMakeLists.txt; then
+  echo "Error: target '$exec_name' already exists"
+  exit 1
+fi
+
+# Check if source file already in TARGETS
+if grep -q " $source_file$" CMakeLists.txt; then
+  echo "Error: source file '$source_file' already in TARGETS"
+  exit 1
+fi
+
+# Validate source file extension
+if [[ ! "$source_file" =~ \.(cpp|cc|cxx)$ ]]; then
+  echo "Error: source file must have .cpp, .cc, or .cxx extension"
+  exit 1
+fi
+
+# Create source file if it doesn't exist
+if [[ ! -f "$source_file" ]]; then
+  mkdir -p "$(dirname "$source_file")"
+  cat > "$source_file" << 'EOF'
+import std;
+
+int main() {
+  std::println("Hello, World!");
+  return 0;
+}
+EOF
+  echo "Created $source_file"
+fi
+
+# Add target to TARGETS list (before the closing paren)
+sed -i "/^set(TARGETS/,/)/ {
+  /)/ i\\  $exec_name $source_file
+}" CMakeLists.txt
+
+echo "Added target '$exec_name' from '$source_file'"
+echo "Run ./build.sh to compile"

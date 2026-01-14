@@ -46,7 +46,7 @@ cp "$SCRIPT_DIR/.clang-format" .
 
 # CMakeLists.txt
 cat > CMakeLists.txt << EOF
-cmake_minimum_required(VERSION 4.0)
+cmake_minimum_required(VERSION 4.0...4.1)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -60,23 +60,78 @@ project($name LANGUAGES CXX)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 
-add_executable($name src/main.cpp)
-target_include_directories($name PRIVATE include)
-set_target_properties($name PROPERTIES CXX_MODULE_STD 1)
+# Executables: add new targets here as "name src/file.cpp"
+set(TARGETS
+  $name src/main.cpp
+)
 
-target_compile_options($name PRIVATE -Wall -Wextra -Wpedantic -Wshadow -Wconversion)
-if(STRICT_WARNINGS)
-  target_compile_options($name PRIVATE -Werror)
-endif()
+# Process targets in pairs: name, source
+list(LENGTH TARGETS TARGETS_LEN)
+math(EXPR TARGETS_LAST "\${TARGETS_LEN} - 1")
+foreach(i RANGE 0 \${TARGETS_LAST} 2)
+  math(EXPR j "\${i} + 1")
+  list(GET TARGETS \${i} target_name)
+  list(GET TARGETS \${j} target_src)
 
-if(ENABLE_SANITIZERS)
-  target_compile_options($name PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer)
-  target_link_options($name PRIVATE -fsanitize=address,undefined)
-endif()
+  add_executable(\${target_name} \${target_src})
+  target_include_directories(\${target_name} PRIVATE include)
+  set_target_properties(\${target_name} PROPERTIES CXX_MODULE_STD 1)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  target_compile_definitions($name PRIVATE _GLIBCXX_ASSERTIONS)
-endif()
+  # Warnings: cpp-best-practices recommended set
+  # https://github.com/cpp-best-practices/cppbestpractices/blob/master/02-Use_the_Tools_Available.md
+  target_compile_options(\${target_name} PRIVATE
+    # Base warnings
+    -Wall -Wextra -Wpedantic
+    -Wshadow                # Warn on shadowed variables
+    -Wconversion            # Warn on implicit type conversions that may lose data
+    -Wsign-conversion       # Warn on sign conversions
+    -Wnon-virtual-dtor      # Warn if base with virtual functions lacks virtual destructor
+    -Woverloaded-virtual    # Warn if function hides virtual from base (signature mismatch)
+    -Wold-style-cast        # Warn on C-style casts
+    -Wcast-align            # Warn on potential performance issues from pointer casts
+    -Wunused                # Warn on unused entities
+    -Wformat=2              # Enhanced format string checks (security)
+    -Wimplicit-fallthrough  # Warn on implicit switch fallthrough
+    -Wdouble-promotion      # Warn on implicit float->double promotion
+    -Wnull-dereference      # Warn on potential null pointer dereference
+  )
+
+  # GCC-specific warnings
+  target_compile_options(\${target_name} PRIVATE
+    \$<\$<CXX_COMPILER_ID:GNU>:-Wduplicated-cond>       # Warn on duplicated if-else conditions
+    \$<\$<CXX_COMPILER_ID:GNU>:-Wduplicated-branches>   # Warn on duplicated if-else branches
+    \$<\$<CXX_COMPILER_ID:GNU>:-Wlogical-op>            # Warn on suspicious logical operations
+    \$<\$<CXX_COMPILER_ID:GNU>:-Wuseless-cast>          # Warn on useless casts
+  )
+
+  if(STRICT_WARNINGS)
+    target_compile_options(\${target_name} PRIVATE -Werror)
+  endif()
+
+  if(ENABLE_SANITIZERS)
+    target_compile_options(\${target_name} PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer)
+    target_link_options(\${target_name} PRIVATE -fsanitize=address,undefined)
+  endif()
+
+  # Debug: runtime assertions
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_definitions(\${target_name} PRIVATE _GLIBCXX_ASSERTIONS)
+  endif()
+
+  # Release: hardening flags (OpenSSF recommended)
+  # https://best.openssf.org/Compiler-Hardening-Guides/Compiler-Options-Hardening-Guide-for-C-and-C++
+  if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    target_compile_definitions(\${target_name} PRIVATE _FORTIFY_SOURCE=3)
+    target_compile_options(\${target_name} PRIVATE
+      -fstack-protector-strong  # Stack buffer overflow detection
+      -fstack-clash-protection  # Stack clash attack mitigation
+    )
+    # Control-flow protection (x86_64 only)
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
+      target_compile_options(\${target_name} PRIVATE -fcf-protection=full)
+    endif()
+  endif()
+endforeach()
 EOF
 
 # build.sh

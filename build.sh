@@ -16,7 +16,7 @@ if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "--h" ]]; then
   echo "Defaults:"
   echo "  Build type: Release"
   echo "  Compiler:   clang++"
-  echo "  Warnings:   -Wall -Wextra -Wpedantic -Wshadow -Wconversion"
+  echo "  Warnings:   See CMakeLists.txt (cpp-best-practices + OpenSSF hardening)"
   exit 0
 fi
 

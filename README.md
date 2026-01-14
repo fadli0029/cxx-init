@@ -7,6 +7,7 @@ This is a very minimal and opinionated C++23 project scaffolding with CMake, cla
 ## What's Included
 
 - `cxx-init`: creates a new C++ project with CMake, C++23 modules (`import std;`), and tooling configs
+- `cxx-add`: adds a new executable target to an existing project
 - `cxx-fix`: runs `clang-tidy --fix` on source files
 - `build.sh`: build script with options for debug, sanitizers, and more
 - `.clang-format`: formatting config (Google-based, includes both C++ and C sections)
@@ -20,6 +21,7 @@ Clone the repo and symlink the scripts to a directory in your `$PATH`:
 git clone https://github.com/fadli0029/cxx-init.git ~/path/to/cxx-init
 
 ln -s ~/path/to/cxx-init/cxx-init ~/.local/bin/
+ln -s ~/path/to/cxx-init/cxx-add ~/.local/bin/
 ln -s ~/path/to/cxx-init/cxx-fix ~/.local/bin/
 ```
 
@@ -61,6 +63,7 @@ Options:
   --sanitize       Enable ASAN and UBSAN
   --tidy           Run clang-tidy after build
   --compiler=NAME  Use specified compiler (default: clang++)
+  --verbose        Show actual compiler commands
   -h, --help       Show this help message
 ```
 
@@ -79,6 +82,15 @@ Examples:
 cxx-fix              # fix all files in src/
 cxx-fix src/main.cpp # fix specific file
 ```
+
+### Adding new executables
+
+```bash
+cxx-add src/test.cpp test    # creates src/test.cpp and adds 'test' executable
+cxx-add src/bench.cpp bench  # creates src/bench.cpp and adds 'bench' executable
+```
+
+This adds the target to the `TARGETS` list in `CMakeLists.txt` with all the proper settings (warnings, sanitizers, etc.).
 
 ## Project Structure
 
@@ -99,13 +111,37 @@ myproject/
 
 ## Compiler Warnings
 
-The generated `CMakeLists.txt` enables these warnings by default:
+The generated `CMakeLists.txt` enables the [cpp-best-practices](https://github.com/cpp-best-practices/cppbestpractices/blob/master/02-Use_the_Tools_Available.md) recommended set:
 
 ```
--Wall -Wextra -Wpedantic -Wshadow -Wconversion
+-Wall -Wextra -Wpedantic
+-Wshadow -Wconversion -Wsign-conversion
+-Wnon-virtual-dtor -Woverloaded-virtual
+-Wold-style-cast -Wcast-align -Wunused
+-Wformat=2 -Wimplicit-fallthrough
+-Wdouble-promotion -Wnull-dereference
+```
+
+GCC-specific warnings are enabled via generator expressions:
+
+```
+-Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wuseless-cast
 ```
 
 Use `--strict` to add `-Werror` (warnings as errors). This is recommended for CI but optional during development.
+
+### Hardening (Release builds)
+
+Release builds include [OpenSSF-recommended](https://best.openssf.org/Compiler-Hardening-Guides/Compiler-Options-Hardening-Guide-for-C-and-C++.html) hardening flags:
+
+```
+-D_FORTIFY_SOURCE=3
+-fstack-protector-strong
+-fstack-clash-protection
+-fcf-protection=full  (x86_64 only)
+```
+
+Debug builds get `_GLIBCXX_ASSERTIONS` for runtime checks instead.
 
 ## Naming Conventions
 
@@ -128,7 +164,7 @@ For std-lib style naming (all `lower_case`), uncomment the overrides at the bott
 The generated `CMakeLists.txt` enables `import std;` through these settings:
 
 ```cmake
-cmake_minimum_required(VERSION 4.0)
+cmake_minimum_required(VERSION 4.0...4.1)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -143,6 +179,7 @@ set_target_properties(myproject PROPERTIES CXX_MODULE_STD 1)
 
 Key parts:
 
+- `VERSION 4.0...4.1`: [version range syntax](https://cliutils.gitlab.io/modern-cmake/) ensures correct policies for the tested CMake range
 - `CMAKE_EXPERIMENTAL_CXX_IMPORT_STD`: experimental UUID that enables `import std;`. This UUID changes between CMake versions. Check [CMake experimental.rst](https://github.com/Kitware/CMake/blob/master/Help/dev/experimental.rst) for the current value.
 - `CMAKE_CXX_EXTENSIONS OFF`: disables compiler-specific extensions for portability
 - `CMAKE_CXX_SCAN_FOR_MODULES`: tells CMake to scan sources for module dependencies
@@ -153,7 +190,7 @@ If builds fail after a CMake update, the UUID likely changed. Update it from the
 ## Requirements
 
 - CMake 4.0+
-- Clang/Clang++ with C++23 modules support
+- GCC 14+ or Clang 18+ (with C++23 modules support)
 - Ninja
 - clang-format
 - clang-tidy
@@ -173,5 +210,7 @@ For more comprehensive project templates with these features, see [cpp-best-prac
 ## References
 
 - [C++ Best Practices](https://github.com/cpp-best-practices/cppbestpractices) - warning flags recommendations
+- [OpenSSF Compiler Hardening Guide](https://best.openssf.org/Compiler-Hardening-Guides/Compiler-Options-Hardening-Guide-for-C-and-C++.html) - hardening flags
+- [Modern CMake](https://cliutils.gitlab.io/modern-cmake/) - CMake best practices
 - [cpp-best-practices/cmake_template](https://github.com/cpp-best-practices/cmake_template) - comprehensive CMake template
 - [CMake experimental.rst](https://github.com/Kitware/CMake/blob/master/Help/dev/experimental.rst) - C++23 module UUID
